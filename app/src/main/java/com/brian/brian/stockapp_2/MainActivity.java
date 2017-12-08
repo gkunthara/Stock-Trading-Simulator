@@ -2,6 +2,7 @@ package com.brian.brian.stockapp_2;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import com.nizhegorodtsev.Stock;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +48,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     Portfolio portfolio;
     public ArrayAdapter<Stock> arrayAdapter;
 
+    final DecimalFormat decimalFormat1 = new DecimalFormat("##0.00");
+
+
 
 
     @Override
@@ -70,31 +75,14 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         )
 
         {
-            // this s a definition for an anonymous subclass of ArrayAdapter
-            // override the getView() method
-            // getView() is called for each item in the data source
-            // creates and returns the view for this item
+
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, ViewGroup parent) {
-                // position is the index of the data source
-
-//                for(int i = 0; i < portfolio.getSecuritiesLength(); i++){
-//                    Stock stock = portfolio.securities.get(i);
-//                    System.out.println(stock.getTicker());
-//                    System.out.println(stock.getAmountOwned());
-//                    System.out.println(stock.getLastTrade());
-//                }
 
                 Stock currStock = portfolio.securities.get(position);
 
                 View view = super.getView(position, convertView, parent);
-                // add some customization code to view
-                // task: get a reference to the Stock at index position
-
-//                System.out.println(currStock.getTicker());
-//                System.out.println(currStock.getAmountOwned());
-//                System.out.println(currStock.getLastTrade());
 
 
                 // next, get a reference to the TextView with id text1
@@ -108,6 +96,17 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
                 TextView textView3 = (TextView) view.findViewById(R.id.percentChange);
                 // task: set the text for textview1
+                if(currStock.getChangePercent() < 0){
+//                    textView3.setText(String.valueOf(currStock.getChangePercent()));
+                    textView3.setTextColor(Color.RED);
+
+                }
+                else{
+//                    textView3.setText(String.valueOf(currStock.getChangePercent()));
+                    textView3.setTextColor(Color.parseColor("#008000"));
+                }
+
+
                 textView3.setText(String.valueOf(currStock.getChangePercent()));
                 TextView textView4 = (TextView) view.findViewById(R.id.sharePrice);
                 // task: set the text for textview1
@@ -184,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         List<String> list = databaseHelper.getSelectAllTickers(TABLE_PORTFOLIO);
 
         for (int i=0; i<list.size(); i++) {
-//            Log.d("Table Contents:", list.get(i));
         }
     }
 
@@ -196,12 +194,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
         if(requestCode == SEARCH_STOCK_CODE && resultCode == Activity.RESULT_OK){
             this.portfolio = (Portfolio)  data.getSerializableExtra("portfolio");
-           // stock = (Stock) data.getSerializableExtra("stock");
-            //portfolio.securities.add(stock);
             arrayAdapter.clear();
 
             displayPortfolio(this.portfolio);
-            displayDB();
             Log.d("securities length", String.valueOf(this.portfolio.getSecurities().size()));
             for (int i=0; i<this.portfolio.getSecurities().size(); i++) {
                 Log.d("Add to Adapter", portfolio.getSecurities().get(i).getTicker());
@@ -212,21 +207,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     }
 
-    public void displayDB() {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        List<String> tickers = databaseHelper.getSelectAllTickers("tablePortfolio");
-        List<Integer> amounts = databaseHelper.getAmountOwned();
-        Double cash = databaseHelper.getCash();
-
-        Log.d("DISPLAY DB", "--START--");
-        Log.d("      Cash", String.valueOf(cash));
-        for (int i=0; i<tickers.size(); i++) {
-            Log.d("      " + tickers.get(i), "(" + String.valueOf(amounts.get(i)) + ")");
-        }
-        Log.d("DISPLAY DB", "---END---");
-    }
-
-
 
     public Stock xmlParser(String jsonInfo) {
         Stock stock = new Stock();
@@ -234,7 +214,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         try {
             String token = jsonInfo.substring(11, jsonInfo.length()-1);
 
-//            Log.d("Check string", token);
             JSONObject jsonObject = new JSONObject(token);
 
             stock.setProperty("ticker", jsonObject.getString("Symbol"));
@@ -316,23 +295,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             } catch (IOException e) {
                 e.printStackTrace();
             } //catch (JSONException e) {
-            //  e.printStackTrace();
-            //}
-
-            // always assume success!!!
 
             return newStock;
         }
 
-        // background threads cannot update the UI
-        // we need to so in a method call onPostExecute(), which
-        // runs on the main UI event thread
 
         @Override
         protected void onPostExecute(Stock resultStock) {
             stock = resultStock;
+
+//            double marketCap = stock.getMarketCapitalization();
+
             Intent intent = new Intent(MainActivity.this, StockDetailsActivity.class);
-//            intent.putExtra(STOCK, stock);
             intent.putExtra("ticker", stock.getTicker());
             intent.putExtra("lastTrade", stock.getLastTrade());
             intent.putExtra("name", stock.getName());
@@ -345,9 +319,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
             startActivityForResult(intent, SEARCH_STOCK_CODE);
             super.onPostExecute(resultStock);
-            // run on the UI thread
-//            Log.d("TAG", "onPostExecute: " + String.valueOf(resultStock));
-//            Log.d("END GAME", resultStock.getName())
         }
     }
 }

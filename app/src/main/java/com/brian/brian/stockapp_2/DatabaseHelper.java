@@ -87,6 +87,7 @@ public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {}
 
 
+
     public void rebuildDatabase() {
         updateCash(10000.0);
         SQLiteDatabase db = this.getWritableDatabase();
@@ -98,7 +99,6 @@ public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
         String sqlCreate = "CREATE TABLE " + TABLE_PORTFOLIO + "(" +
                 "ticker" + " TEXT PRIMARY KEY, " +
                 "amountOwned" + " INTEGER)";
-        //updateCash(10000.0);
         Log.d(PORTFOLIO_TAG, "onCreate: " + sqlCreate);
         db.execSQL(sqlCreate);
     }
@@ -179,7 +179,8 @@ public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
     }
     */
 
-    public List<Integer> getAmountOwned() {
+
+    public List<Integer> getAmountsOwned() {
         List<Integer> amountsOwned = new ArrayList<>();
 
         Cursor cursor = getSelectAllNotesCursor(TABLE_PORTFOLIO);
@@ -238,21 +239,22 @@ public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
         db.close();
     }
 
-    /*
-    public String[] selectNote(int id) {
 
-        //delete a note by an id
-        String[] toReturn = {"", "", ""};
+    public int getAmountOwned (String ticker) {
 
-        List<Note> myList = getSelectAllNotesList();
-        toReturn[0] = myList.get(id).getTitle();
-        toReturn[1] = myList.get(id).getCategory();
-        toReturn[2] = myList.get(id).getContent();
+        String sqlSelectAmount = "SELECT * FROM tablePortfolio WHERE ticker = '" + ticker + "'";
 
-        Log.d("TAGUMUP", toReturn[0]);
-        return toReturn;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(sqlSelectAmount, null);
+        int amountOwned = 0;
+        while (cursor.moveToNext()) { // returns false when there is no next
+            amountOwned = cursor.getInt(1);
+        }
+        db.close();
+
+        return amountOwned;
     }
-    */
+
 
     public void deleteAllTicker(String table) {
         String sqlDeleteNotes = " DELETE FROM " + table;
@@ -262,4 +264,3 @@ public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
         db.close();
     }
 }
-

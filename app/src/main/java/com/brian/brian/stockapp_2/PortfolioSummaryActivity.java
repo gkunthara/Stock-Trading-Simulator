@@ -25,8 +25,8 @@ public class PortfolioSummaryActivity extends AppCompatActivity {
             double netWorth = extras.getDouble("netWorth", 1);
             double cashHoldings = extras.getDouble("cashHoldings", 1);
             double stockHoldings = extras.getDouble("stockHoldings", 1);
-            double dailyGrowth = extras.getDouble("dailyGrowth", 1);
-            double careerGrowth = extras.getDouble("careerGrowth", 1);
+            double dailyGrowth = extras.getDouble("dailyGrowth", 1) / 100;
+            double careerGrowth = extras.getDouble("careerGrowth", 1) / 1000;
 
             TextView dailyGrowthAmount = (TextView) findViewById(R.id.dailyGrowthAmount);
             TextView netWorthAmount = (TextView) findViewById(R.id.netWorthAmount);
@@ -48,15 +48,12 @@ public class PortfolioSummaryActivity extends AppCompatActivity {
                 careerGrowthAmount.setTextColor(Color.RED);
             }
 
-
             dailyGrowthAmount.setText(String.valueOf(decimalFormat2.format(dailyGrowth)) + "%");
             netWorthAmount.setText(String.valueOf(decimalFormat1.format(netWorth)));
             cashHoldingsAmount.setText(String.valueOf(decimalFormat1.format(cashHoldings)));
             stockHoldingsAmount.setText(String.valueOf(decimalFormat1.format(stockHoldings)));
             careerGrowthAmount.setText(String.valueOf(decimalFormat2.format(careerGrowth)) + "%");
-
         }
-
 
 
 

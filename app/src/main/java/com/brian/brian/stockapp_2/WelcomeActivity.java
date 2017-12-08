@@ -41,48 +41,17 @@ public class WelcomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
-        this.portfolio = new Portfolio(securities, 10000.0);
-        //accessDatabase();
+        this.portfolio = new Portfolio(securities, this);
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         databaseHelper.rebuildDatabase();
-
-//        Stock stock1 = new Stock();
-//        stock1.setProperty("ticker", "TSLA");
-//        stock1.setAmountSharesOwned(3);
-//        stock1.setProperty("changePercent", -0.16);
-//        stock1.setProperty("lastTrade", 169.64);
-//        portfolio.getSecurities().add(stock1);
-
-
-        if (true) {
-            Stock AAPL = new Stock();
-            AAPL.setProperty("ticker", "AAPL");
-            AAPL.setProperty("lastTrade", 105.0);
-            AAPL.setProperty("change", 5.0);
-            AAPL.setProperty("changePercent", 5.0);
-            AAPL.setAmountSharesOwned(5);
-
-            Stock GE = new Stock();
-            GE.setProperty("ticker", "GE");
-            GE.setProperty("lastTrade", 1005.0);
-            GE.setProperty("change", 5.0);
-            GE.setProperty("changePercent", .5);
-            GE.setAmountSharesOwned(3);
-
-            portfolio.purchase(AAPL, this);
-            portfolio.purchase(GE, this);
-            displayPortfolio(this.portfolio);
-            displayDB();
-
-        }
 
 
     }
 
     public void goToMainActivity(View view){
 
-        Portfolio portfolio = new Portfolio(this.securities, 10000.0);
+        Portfolio portfolio = new Portfolio(this.securities, this);
         displayPortfolio(portfolio);
 
         Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
@@ -102,48 +71,7 @@ public class WelcomeActivity extends AppCompatActivity {
         Log.d("DISPLAY PORTFOLIO", "---END---");
     }
 
-    public void displayDB() {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        List<String> tickers = databaseHelper.getSelectAllTickers(TABLE_PORTFOLIO);
-        List<Integer> amounts = databaseHelper.getAmountOwned();
-        Double cash = databaseHelper.getCash();
-
-        Log.d("DISPLAY DB", "--START--");
-        Log.d("      Cash", String.valueOf(cash));
-        for (int i=0; i<tickers.size(); i++) {
-            Log.d("      " + tickers.get(i), "(" + String.valueOf(amounts.get(i)) + ")");
-        }
-        Log.d("DISPLAY DB", "---END---");
-    }
-
-    /*
-    public void loadPortfolio(View view) {
-        this.portfolio = new Portfolio(securities, cash);
-        this.portfolio.setAmountsOwned(this.amountsOwned);
-    }
-    */
-
-    public void accessDatabase() {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        List<String> tickers = databaseHelper.getSelectAllTickers(TABLE_PORTFOLIO);
-        this.cash = databaseHelper.getCash();
-        this.amountsOwned = databaseHelper.getAmountOwned();
-
-        for (int i=0; i<tickers.size(); i++) {
-            Log.d("TICKER SIZE", "+" + tickers.get(i));
-        }
-
-
-        for (int i=0; i<tickers.size(); i++){
-            APIRequestAsyncTask asyncTask = new APIRequestAsyncTask();
-            String ticker = "http://dev.markitondemand.com/MODApis/Api/v2/Quote/jsonp?symbol=" +
-                    tickers.get(i) + "&callback=myFunction";
-
-            asyncTask.execute(ticker);
-        }
-
-    }
-
+//
     private class APIRequestAsyncTask extends AsyncTask<String, Void, String> {
         @Override
         protected void onPreExecute() {
@@ -156,18 +84,10 @@ public class WelcomeActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
 
-            // THIS CODE RUNS ON A BACKGROUND THREAD
-            // varargs is the ...
-            // variable number of arguments
-            // treat like an array
             Log.d("TAG", "doInBackground: HELLO FROM BACKGROUND THREAD");
             Log.d("TAG", "doInBackground: " + strings[0]);
 
-            // there are three things we need to do
-            // 1. open the request URL
-            // 2. download the JSON response
-            // 3. extract the meters value from the response
-            // come back to this!
+
 
             String result = "";
 
@@ -191,12 +111,6 @@ public class WelcomeActivity extends AppCompatActivity {
 
 
                 Log.d("TAGLIERE", result);
-                //String token = result.substring(11, result.length()-1);
-                //Log.d("TAGLIERE", token);
-                //newStock = xmlParser(result);
-                //Log.d("TAGLIERE", newStock.getName());
-                //MainActivity.this.mainStock = newStock;
-
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -213,19 +127,9 @@ public class WelcomeActivity extends AppCompatActivity {
             return result;
         }
 
-        // background threads cannot update the UI
-        // we need to so in a method call onPostExecute(), which
-        // runs on the main UI event thread
-
         @Override
         protected void onPostExecute(String resultStock) {
             super.onPostExecute(resultStock);
-            // run on the UI thread
-            //resultStock.setAmountSharesOwned(1);
-            //mainStock = resultStock;
-            //securities.add(resultStock);
-            //MainActivity.this.brianFlag = true;
-
 
             securities.add(xmlParser(resultStock));
 

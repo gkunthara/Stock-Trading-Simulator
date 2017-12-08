@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.TextView;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.nizhegorodtsev.Stock;
 
@@ -28,9 +29,9 @@ import java.util.List;
 
 public class StockDetailsActivity extends AppCompatActivity{
 
-    final DecimalFormat decimalFormat1 = new DecimalFormat("$##0.00");
+    final DecimalFormat decimalFormat1 = new DecimalFormat("##0.00");
     final DecimalFormat decimalFormat2 = new DecimalFormat("#.#");
-    final DecimalFormat decimalFormat3 = new DecimalFormat("##0.00");
+    final DecimalFormat decimalFormat3 = new DecimalFormat("##0.0");
     Portfolio portfolio;
     Stock stock = new Stock();
 
@@ -46,14 +47,14 @@ public class StockDetailsActivity extends AppCompatActivity{
             final double lastTrade = extras.getDouble("lastTrade", 1);
             double change = extras.getDouble("change", 1);
             double changePercent = extras.getDouble("percentChange", 1);
-            double marketCap = extras.getDouble("marketCap", 1);
+            String marketCap = extras.getString("marketCap", "");
+            marketCap = marketCap.substring(0,3);
             String ticker = extras.getString("ticker","");
             String name = extras.getString("name","");
-//            this.stock = new Stock();
             this.stock.setProperty("ticker", ticker);
             this.stock.setProperty("change", decimalFormat1.format(change));
-            this.stock.setProperty("changePercent", decimalFormat3.format(changePercent));
-            this.stock.setProperty("lastTrade", lastTrade);
+            this.stock.setProperty("changePercent", decimalFormat1.format(changePercent));
+            this.stock.setProperty("lastTrade", decimalFormat3.format(lastTrade));
 
 
             this.portfolio = (Portfolio) getIntent().getSerializableExtra("portfolio");
@@ -83,16 +84,12 @@ public class StockDetailsActivity extends AppCompatActivity{
             stockName.setText(name);
             stockChange.setText(String.valueOf(decimalFormat1.format(change)));
             stockPercentChange.setText(String.valueOf(decimalFormat2.format(changePercent)) + "%");
-            stockMarketCap.setText(String.valueOf(decimalFormat1.format(marketCap)));
+            stockMarketCap.setText((marketCap));
+
 
 
             EditText sharesTobuy = (EditText)findViewById(R.id.numSharesToBuy);
             EditText sharesToSell = (EditText)findViewById(R.id.numSharesToSell);
-
-//            double numSharesToBuy = Double.parseDouble(sharesTobuy.getText().toString());
-//            String totalSharesToBuy = Double.toString(numSharesToBuy * lastTrade);
-//            TextView totalPrice = (TextView) findViewById(R.id.totalPrice);
-//            totalPrice.setText(totalSharesToBuy);
 
             TextWatcher inputTextWatcherBuy = new TextWatcher() {
                 public void afterTextChanged(Editable s) {
@@ -100,6 +97,7 @@ public class StockDetailsActivity extends AppCompatActivity{
                     if(!s.toString().equals("")){
                         double numSharesToBuy = Double.parseDouble(s.toString());
                         String totalSharesToBuy = Double.toString(numSharesToBuy * lastTrade);
+                        totalSharesToBuy = decimalFormat1.format(Double.valueOf(totalSharesToBuy));
                         TextView totalPrice = (TextView) findViewById(R.id.totalPrice);
                         totalPrice.setTextColor(Color.RED);
                         totalPrice.setText(totalSharesToBuy);
@@ -112,6 +110,7 @@ public class StockDetailsActivity extends AppCompatActivity{
                     if(!s.toString().equals("")){
                         double numSharesToBuy = Double.parseDouble(s.toString());
                         String totalSharesToBuy = Double.toString(numSharesToBuy * lastTrade);
+                        totalSharesToBuy = decimalFormat1.format(Double.valueOf(totalSharesToBuy));
                         TextView totalPrice = (TextView) findViewById(R.id.totalPrice);
                         totalPrice.setTextColor(Color.RED);
                         totalPrice.setText(totalSharesToBuy);
@@ -124,10 +123,10 @@ public class StockDetailsActivity extends AppCompatActivity{
             TextWatcher inputTextWatcherSell = new TextWatcher() {
                 public void afterTextChanged(Editable s) {
 
-
                     if(!s.toString().trim().equals("")){
                         double numSharesToSell = Double.parseDouble(s.toString());
                         String totalSharesToSell = Double.toString(numSharesToSell * lastTrade);
+                        totalSharesToSell = decimalFormat1.format(Double.valueOf(totalSharesToSell));
                         TextView totalPrice = (TextView) findViewById(R.id.totalPrice);
                         totalPrice.setTextColor(Color.parseColor("#008000"));
                         totalPrice.setText(totalSharesToSell);
@@ -139,6 +138,7 @@ public class StockDetailsActivity extends AppCompatActivity{
                     if(!s.toString().trim().equals("")){
                         double numSharesToSell = Double.parseDouble(s.toString());
                         String totalSharesToSell = Double.toString(numSharesToSell * lastTrade);
+                        totalSharesToSell = decimalFormat1.format(Double.valueOf(totalSharesToSell));
                         TextView totalPrice = (TextView) findViewById(R.id.totalPrice);
                         totalPrice.setTextColor(Color.parseColor("#008000"));
                         totalPrice.setText(totalSharesToSell);
@@ -178,18 +178,28 @@ public class StockDetailsActivity extends AppCompatActivity{
         TextView  sharesToBuyView = (TextView) findViewById(R.id.numSharesToBuy);
 
         double price = Double.valueOf(priceView.getText().toString());
-        int sharesToBuy = Integer.valueOf(sharesToBuyView.getText().toString());
+
+        int sharesToBuy = 0;
+        try {
+            sharesToBuy = Integer.valueOf(sharesToBuyView.getText().toString());
+        } catch (NumberFormatException e) {
+            sharesToBuy = 0;
+        }
         this.stock.setAmountSharesOwned(sharesToBuy);
 
         portfolio = (Portfolio) getIntent().getSerializableExtra("portfolio");
-        portfolio.purchase(this.stock, this);
+        if(portfolio.purchase(this.stock, this)){
+            Intent intent = new Intent();
+            intent.putExtra("portfolio", this.portfolio);
+            setResult(Activity.RESULT_OK, intent);
+            this.finish();
+        }
+        else{
+            Toast.makeText(this, "Insufficient Funds", Toast.LENGTH_SHORT).show();
+        }
+        }
 
-        Intent intent = new Intent();
-        intent.putExtra("portfolio", this.portfolio);
-        //intent.putExtra("stock", stock);
-        setResult(Activity.RESULT_OK, intent);
-        this.finish();
-    }
+
 
 
     public void sellShares(View view){
@@ -198,18 +208,25 @@ public class StockDetailsActivity extends AppCompatActivity{
         TextView  sharesToSellView = (TextView) findViewById(R.id.numSharesToSell);
 
         double price = Double.valueOf(priceView.getText().toString());
-        int sharesToSell = Integer.valueOf(sharesToSellView.getText().toString());
+        int sharesToSell = 0;
+        try {
+            sharesToSell = Integer.valueOf(sharesToSellView.getText().toString());
+        } catch (NumberFormatException e) {
+                sharesToSell = 0;
+        }
         this.stock.setAmountSharesOwned(sharesToSell);
 
         portfolio = (Portfolio) getIntent().getSerializableExtra("portfolio");
-        portfolio.sell(this.stock, this);
-        Log.d("ON SALE", this.stock.getTicker() + String.valueOf(this.stock.getAmountOwned()));
-        System.out.println("You sold some stock!!!");
-        Intent intent = new Intent();
-        intent.putExtra("portfolio", this.portfolio);
-        //intent.putExtra("stock", stock);
-        setResult(Activity.RESULT_OK, intent);
-        this.finish();
+        if(portfolio.sell(this.stock, this)){
+            Intent intent = new Intent();
+            intent.putExtra("portfolio", this.portfolio);
+            setResult(Activity.RESULT_OK, intent);
+            this.finish();
+        }
+        else{
+            Toast.makeText(this, "Unable to sell stock", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
 

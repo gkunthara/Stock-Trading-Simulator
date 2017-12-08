@@ -14,7 +14,7 @@ public class Portfolio implements Serializable{
     private double netWorth;
     private double cash;
     public List<Stock> securities;
-    private int securitiesLength;
+    //private int securitiesLength;
     private double careerPortfolioGrowth;
     private double careerPortfolioGrowthPercent;
     private double dailyPortfolioGrowth;
@@ -28,28 +28,29 @@ public class Portfolio implements Serializable{
     static final String CASH_CASH = "cash";
 
 
-    public Portfolio(List<Stock> securities, double cash) {
-        this.cash = cash;
+    public Portfolio(List<Stock> securities, Context context) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(context);
+        this.cash = databaseHelper.getCash();
         this.securities = securities;
-        this.securitiesLength = securities.size();
-        this.netWorth = calcNetWorth();
+        this.netWorth = calcNetWorth(context);
 
-        calcCareerPortfolioGrowthAndPercent();
-        calcDailyPortfolioGrowthAndPercent();
+        calcCareerPortfolioGrowthAndPercent(context);
+        calcDailyPortfolioGrowthAndPercent(context);
     }
 
     public Portfolio() {}
 
     public void setAmountsOwned(List<Integer> amountsOwned) {
-        for (int i=0; i<amountsOwned.size(); i++) {
+        for (int i=0; i<this.securities.size(); i++) {
             this.securities.get(i).setAmountSharesOwned(amountsOwned.get(i));
         }
     }
 
     // Calculate current net worth
-    public double calcNetWorth() {
+    public double calcNetWorth(Context context) {
+
         double calcNetWorth = this.cash;
-        for (int i=0; i<this.securitiesLength; i++) {
+        for (int i=0; i<this.securities.size(); i++) {
             Log.d("CALC NET WORTH:", String.valueOf(securities.get(i).getAmountOwned()));
 
             calcNetWorth = calcNetWorth + securities.get(i).getAmountOwned() * securities.get(i).getLastTrade();
@@ -60,10 +61,13 @@ public class Portfolio implements Serializable{
 
 
     // calculate career growth in $ and %
-    public void calcCareerPortfolioGrowthAndPercent() {
+    public void calcCareerPortfolioGrowthAndPercent(Context context) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(context);
+        this.cash = databaseHelper.getCash();
+
         // Players Start with 10,000
         double calcCareerPortfolioGrowth = this.cash;
-        for (int i=0; i<this.securitiesLength; i++) {
+        for (int i=0; i<this.securities.size(); i++) {
             calcCareerPortfolioGrowth = calcCareerPortfolioGrowth +
                     securities.get(i).getAmountOwned()*securities.get(i).getLastTrade();
         }
@@ -76,9 +80,9 @@ public class Portfolio implements Serializable{
 
 
     // calculate daily portfolio growth in $ and %
-    public void calcDailyPortfolioGrowthAndPercent() {
+    public void calcDailyPortfolioGrowthAndPercent(Context context) {
         double calcDailyPortfolioGrowth = 0.0;
-        for (int i=0; i<this.securitiesLength; i++) {
+        for (int i=0; i<this.securities.size(); i++) {
             calcDailyPortfolioGrowth = calcDailyPortfolioGrowth +
                     securities.get(i).getAmountOwned()
                             * (1+securities.get(i).getChangePercent());
@@ -92,18 +96,23 @@ public class Portfolio implements Serializable{
 
     // Stock.numOwned should contain an unsigned number about how many shares to sell
     public boolean sell(Stock stock, Context context) {
+        Log.d("Selling:" + stock.getTicker(), "");
+        DatabaseHelper databaseHelper = new DatabaseHelper(context);
+        this.cash = databaseHelper.getCash();
+
         int numToSell = stock.getAmountOwned();
-        double valueOfSale = stock.getLastTrade() * numToSell;
         int index = 0;
-        int numSharesOwned = 0;
+        int numSharesOwned = databaseHelper.getAmountOwned(stock.getTicker());
+        double valueOfSale = stock.getLastTrade() * numToSell;
 
         boolean canExecuteSale = false;
 
         // Find stock in portfolio
-        for (int i=0; i<this.securitiesLength; i++) {
+        for (int i=0; i<this.securities.size(); i++) {
             if (securities.get(i).getTicker().equals(securities.get(i).getTicker())) {
                 index = i;
-                numSharesOwned = securities.get(i).getAmountOwned();
+                //       numSharesOwned = securities.get(i).getAmountOwned();
+                canExecuteSale = true;
                 break;
             }
         }
@@ -111,10 +120,12 @@ public class Portfolio implements Serializable{
         Log.d("Shares Owned: " + numSharesOwned, "To Sell: " + numToSell);
 
         // Sell complete Stake
-        if (numSharesOwned == numToSell) {
+        if (numSharesOwned == numToSell && canExecuteSale) {
+            Log.d("They", "were equal");
             this.securities.remove(index);
+
             this.cash = this.cash + valueOfSale;
-            this.securitiesLength--;
+            //this.securitiesLength--;
 
 
             // TODO --> Update Cash Table        -DONE
@@ -125,14 +136,15 @@ public class Portfolio implements Serializable{
         }
         // Trim Stake
         else if (numSharesOwned > numToSell) {
-            securities.get(index).sellShares(numToSell);
+            //this.securities.get(index).sellShares(numToSell);
             this.cash = this.cash + valueOfSale;
+            int sharesLeft = numSharesOwned - numToSell;
+            this.securities.get(index).setAmountSharesOwned(sharesLeft);
 
             // TODO --> Update Cash Table        -DONE
             // TODO --> Update Portfolio Table   -DONE
             setDBCash(this.cash, context);
-            setDBAmountOwned(this.securities.get(index).getTicker(),
-                    this.securities.get(index).getAmountOwned(), context);
+            setDBAmountOwned(stock.getTicker(), sharesLeft, context);
             return true;
         }
         // No Sale Due to Lack of Shares
@@ -153,6 +165,9 @@ public class Portfolio implements Serializable{
 
     // Number of share being purchased should already be encapsulated in stock.numOwned
     public boolean purchase(Stock stock, Context context) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(context);
+        this.cash = databaseHelper.getCash();
+
         boolean alreadyOwned = false;	// flag for whether stock is already owned
         int alreadyOwnedIndex = -999;	// -999 will give out of bounds error
 
@@ -162,7 +177,7 @@ public class Portfolio implements Serializable{
         if (costOfPurchase < this.cash){
             // Loop to find if stock is already in portfolio
             System.out.println("mbvmnfgng");
-            for (int i=0; i<this.securitiesLength; i++) {
+            for (int i=0; i<this.securities.size(); i++) {
                 if (this.securities.get(i).getTicker().equals(stock.getTicker())) {
                     alreadyOwned = true;
                     alreadyOwnedIndex = i;
@@ -192,7 +207,7 @@ public class Portfolio implements Serializable{
                 this.securities.add(stock);
                 System.out.println("sdfsdfsdfs" + this.securities);
                 this.cash = this.cash - costOfPurchase;
-                this.securitiesLength++;
+                //this.securitiesLength++;
 
                 // TODO --> Update Cash        --Done
                 // TODO --> Update DB          --Done
@@ -241,7 +256,7 @@ public class Portfolio implements Serializable{
     public double getDailyPortfolioGrowthPercent() { return dailyPortfolioGrowthPercent; }
 
     public List<Stock> getSecurities() { return this.securities; }
-    public int getSecuritiesLength() { return this.securitiesLength; }
+    //public int getSecuritiesLength() { return this.securitiesLength; }
 
 
     @Override
@@ -249,4 +264,3 @@ public class Portfolio implements Serializable{
         return this.securities.toString();
     }
 }
-

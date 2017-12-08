@@ -106,7 +106,7 @@
         android:layout_marginTop="18dp"
         android:layout_marginStart="18dp"
         android:layout_columnSpan="2"
-        android:text="MARKET CAP"
+        android:text="MARKET CAP (B)"
         android:textSize="22sp"
         android:textColor="@android:color/black"
 
@@ -155,12 +155,13 @@
         android:id="@+id/numSharesToBuy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0 "
+        android:text="0"
         android:layout_marginTop="18dp"
         android:layout_columnSpan="2"
         android:layout_gravity="center"
         android:textSize="22sp"
         android:textColor="@android:color/black"
+        android:inputType="number"
 
         />
 
@@ -173,6 +174,7 @@
         android:textSize="22sp"
         android:layout_gravity="center"
         android:textColor="@android:color/black"
+        android:inputType="number"
 
         />
 
@@ -225,7 +227,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="18dp"
         android:gravity="end"
-        android:text="$0.00"
+        android:text="0.00"
         android:textSize="25sp"
         android:textColor="@android:color/black"
         android:layout_gravity="center"
