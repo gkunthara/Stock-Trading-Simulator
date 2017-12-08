@@ -109,10 +109,9 @@ public class Portfolio implements Serializable{
 
         // Find stock in portfolio
         for (int i=0; i<this.securities.size(); i++) {
-            if (securities.get(i).getTicker().equals(securities.get(i).getTicker())) {
+            if (securities.get(i).getTicker().equals(stock.getTicker())) {
                 index = i;
                 //       numSharesOwned = securities.get(i).getAmountOwned();
-                canExecuteSale = true;
                 break;
             }
         }
@@ -120,7 +119,7 @@ public class Portfolio implements Serializable{
         Log.d("Shares Owned: " + numSharesOwned, "To Sell: " + numToSell);
 
         // Sell complete Stake
-        if (numSharesOwned == numToSell && canExecuteSale) {
+        if (numSharesOwned == numToSell) {
             Log.d("They", "were equal");
             this.securities.remove(index);
 
@@ -158,7 +157,6 @@ public class Portfolio implements Serializable{
                     + totalShares
                     + " shares...";
 
-            //Toast.toast(msg);
             return false;
         }
     }
@@ -205,7 +203,6 @@ public class Portfolio implements Serializable{
             else {
 //                this.securities.add(stock);
                 this.securities.add(stock);
-                System.out.println("sdfsdfsdfs" + this.securities);
                 this.cash = this.cash - costOfPurchase;
                 //this.securitiesLength++;
 

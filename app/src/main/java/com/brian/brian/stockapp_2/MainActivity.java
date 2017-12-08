@@ -37,18 +37,10 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity implements Serializable {
 
     static final String TABLE_PORTFOLIO = "tablePortfolio";
-    static final String TICKER_PORTFOLIO = "_ticker";
-    static final String TABLE_WATCHLIST = "tableWatchlist";
-    static final String TICKER_WATCHLIST = "_ticker";
-    static final String TABLE_CASH = "tableCash";
-    static final String CASH_CASH = "cash";
     static final int SEARCH_STOCK_CODE = 1;
-    static final String STOCK = "stock";
     Stock stock = new Stock();
     Portfolio portfolio;
     public ArrayAdapter<Stock> arrayAdapter;
-
-    final DecimalFormat decimalFormat1 = new DecimalFormat("##0.00");
 
 
 
@@ -95,21 +87,17 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 textView2.setText("(" + currStock.getAmountOwned() + ")");
 
                 TextView textView3 = (TextView) view.findViewById(R.id.percentChange);
-                // task: set the text for textview1
                 if(currStock.getChangePercent() < 0){
-//                    textView3.setText(String.valueOf(currStock.getChangePercent()));
                     textView3.setTextColor(Color.RED);
 
                 }
                 else{
-//                    textView3.setText(String.valueOf(currStock.getChangePercent()));
                     textView3.setTextColor(Color.parseColor("#008000"));
                 }
 
 
                 textView3.setText(String.valueOf(currStock.getChangePercent()));
                 TextView textView4 = (TextView) view.findViewById(R.id.sharePrice);
-                // task: set the text for textview1
                 textView4.setText(String.valueOf(currStock.getLastTrade()));
 
 
@@ -136,20 +124,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     public void addAction(View view) {
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
-//        Log.d("TAG", "ADD ACTION");
         EditText editText =  (EditText) findViewById(R.id.editText);
         String text = editText.getText().toString();
         String urlRequest = "http://dev.markitondemand.com/MODApis/Api/v2/Quote/jsonp?symbol="
                 + text + "&callback=myFunction";
         APIRequestAsyncTask asyncTask = new APIRequestAsyncTask();
-        asyncTask.execute(urlRequest);
-
-        //databaseHelper.insertStock(text, TABLE_PORTFOLIO);
-//        List<String> list = databaseHelper.getSelectAllTickers(TABLE_PORTFOLIO);
-//
-//        for (int i=0; i<list.size(); i++) {
-//            Log.d("Table Contents:", list.get(i));
-//        }
+        asyncTask.execute(urlRequest); //grab real time data of whatever stock was searched
 
 
     }
@@ -173,20 +153,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
 
-    public void deleteAction(View view) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this);
-        EditText editText =  (EditText) findViewById(R.id.editText);
-        String text = editText.getText().toString();
-
-        databaseHelper.deleteStock(text, TABLE_PORTFOLIO);
-
-        List<String> list = databaseHelper.getSelectAllTickers(TABLE_PORTFOLIO);
-
-        for (int i=0; i<list.size(); i++) {
-        }
-    }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -197,9 +163,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             arrayAdapter.clear();
 
             displayPortfolio(this.portfolio);
-            Log.d("securities length", String.valueOf(this.portfolio.getSecurities().size()));
             for (int i=0; i<this.portfolio.getSecurities().size(); i++) {
-                Log.d("Add to Adapter", portfolio.getSecurities().get(i).getTicker());
                 arrayAdapter.add(this.portfolio.getSecurities().get(i));
             }
             arrayAdapter.notifyDataSetChanged();
@@ -249,21 +213,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         protected Stock doInBackground(String... strings) {
             Stock newStock = null;
 
-            // THIS CODE RUNS ON A BACKGROUND THREAD
-            // varargs is the ...
-            // variable number of arguments
-            // treat like an array
-//            Log.d("TAG", "doInBackground: HELLO FROM BACKGROUND THREAD");
-//            Log.d("TAG", "doInBackground: " + strings[0]);
-
-            // there are three things we need to do
-            // 1. open the request URL
-            // 2. download the JSON response
-            // 3. extract the meters value from the response
-            // come back to this!
-
-            String toReturn = "";
-
             // step 1
             try {
                 URL url = new URL(strings[0]);
@@ -281,12 +230,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     data = reader.read();
                 }
 
-
-//                Log.d("TAGLIERE", result);
-                //String token = result.substring(11, result.length()-1);
-                //Log.d("TAGLIERE", token);
                 newStock = xmlParser(result);
-//                Log.d("TAGLIERE", newStock.getName());
 
 
 
@@ -304,7 +248,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         protected void onPostExecute(Stock resultStock) {
             stock = resultStock;
 
-//            double marketCap = stock.getMarketCapitalization();
 
             Intent intent = new Intent(MainActivity.this, StockDetailsActivity.class);
             intent.putExtra("ticker", stock.getTicker());

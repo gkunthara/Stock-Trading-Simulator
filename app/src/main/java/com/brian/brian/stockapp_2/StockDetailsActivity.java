@@ -10,22 +10,11 @@ import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.TextView;
-import android.util.Log;
 import android.widget.Toast;
-
 import com.nizhegorodtsev.Stock;
-
-import org.w3c.dom.Text;
-
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * Created by gkunthara on 12/4/17.
- */
 
 public class StockDetailsActivity extends AppCompatActivity{
 
@@ -174,10 +163,7 @@ public class StockDetailsActivity extends AppCompatActivity{
 
     public void buyShares(View view){
 
-        TextView priceView = (TextView) findViewById(R.id.totalPrice);
         TextView  sharesToBuyView = (TextView) findViewById(R.id.numSharesToBuy);
-
-        double price = Double.valueOf(priceView.getText().toString());
 
         int sharesToBuy = 0;
         try {
@@ -194,7 +180,7 @@ public class StockDetailsActivity extends AppCompatActivity{
             setResult(Activity.RESULT_OK, intent);
             this.finish();
         }
-        else{
+        else{ //if unable to make purchase
             Toast.makeText(this, "Insufficient Funds", Toast.LENGTH_SHORT).show();
         }
         }
@@ -204,10 +190,8 @@ public class StockDetailsActivity extends AppCompatActivity{
 
     public void sellShares(View view){
 
-        TextView priceView = (TextView) findViewById(R.id.totalPrice);
         TextView  sharesToSellView = (TextView) findViewById(R.id.numSharesToSell);
 
-        double price = Double.valueOf(priceView.getText().toString());
         int sharesToSell = 0;
         try {
             sharesToSell = Integer.valueOf(sharesToSellView.getText().toString());
@@ -223,7 +207,7 @@ public class StockDetailsActivity extends AppCompatActivity{
             setResult(Activity.RESULT_OK, intent);
             this.finish();
         }
-        else{
+        else{ //if unable to sell shares
             Toast.makeText(this, "Unable to sell stock", Toast.LENGTH_SHORT).show();
         }
 

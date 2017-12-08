@@ -23,17 +23,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 
 public class WelcomeActivity extends AppCompatActivity {
-    static final String TABLE_PORTFOLIO = "tablePortfolio";
-    static final String TICKER_PORTFOLIO = "_ticker";
-    static final String TABLE_WATCHLIST = "tableWatchlist";
-    static final String TICKER_WATCHLIST = "_ticker";
-    static final String TABLE_CASH = "tableCash";
-    static final String CASH_CASH = "cash";
-
 
     ArrayList<Stock> securities = new ArrayList<>();
-    double cash;
-    List<Integer> amountsOwned;
     Portfolio portfolio;
 
 
@@ -45,18 +36,15 @@ public class WelcomeActivity extends AppCompatActivity {
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
         databaseHelper.rebuildDatabase();
-
-
     }
 
     public void goToMainActivity(View view){
 
-        Portfolio portfolio = new Portfolio(this.securities, this);
+        Portfolio portfolio = new Portfolio(this.securities, this); //send portfolio of stocks to main view
         displayPortfolio(portfolio);
 
         Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
         intent.putExtra("portfolio", portfolio);
-        //put any intents necessary
         startActivity(intent);
     }
 
