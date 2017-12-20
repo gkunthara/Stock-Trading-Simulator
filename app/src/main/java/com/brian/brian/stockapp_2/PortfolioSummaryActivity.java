@@ -6,11 +6,18 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PortfolioSummaryActivity extends AppCompatActivity {
 
-    final DecimalFormat decimalFormat1 = new DecimalFormat("$##0.00");
     final DecimalFormat decimalFormat2 = new DecimalFormat("#.#");
 
     @Override
@@ -22,17 +29,44 @@ public class PortfolioSummaryActivity extends AppCompatActivity {
 
         if(extras != null){
 
-            double netWorth = extras.getDouble("netWorth", 1);
+
             double cashHoldings = extras.getDouble("cashHoldings", 1);
             double stockHoldings = extras.getDouble("stockHoldings", 1);
             double dailyGrowth = extras.getDouble("dailyGrowth", 1) / 100;
             double careerGrowth = extras.getDouble("careerGrowth", 1) / 1000;
 
+            PieChart pieChart = (PieChart) findViewById(R.id.chart);
+
+            Legend legend = pieChart.getLegend();
+            legend.setEnabled(true);
+            legend.setTextSize(20);
+            legend.setXEntrySpace(15);
+
+
+            List<PieEntry> entries = new ArrayList<>();
+
+            float cash = (float) cashHoldings;
+            float stock = (float) stockHoldings;
+
+
+            entries.add(new PieEntry(cash, "Cash"));
+            entries.add(new PieEntry(stock, "Stocks"));
+
+            int[] colors = new int[2];
+            colors[0] = R.color.cash;
+            colors[1] = R.color.stock;
+            PieDataSet set = new PieDataSet(entries, "");
+            set.setValueTextSize(15f);
+            set.setColors(colors, this);
+            PieData data = new PieData(set);
+            pieChart.setData(data);
+            pieChart.setDrawSlicesUnderHole(true);
+            pieChart.getDescription().setEnabled(false);
+            pieChart.setEntryLabelTextSize(15f);
+            pieChart.invalidate(); // refresh
+
             TextView dailyGrowthAmount = (TextView) findViewById(R.id.dailyGrowthAmount);
-            TextView netWorthAmount = (TextView) findViewById(R.id.netWorthAmount);
-            TextView cashHoldingsAmount = (TextView) findViewById(R.id.cashHoldingsAmount);
             TextView careerGrowthAmount = (TextView) findViewById(R.id.careerGrowthAmount);
-            TextView stockHoldingsAmount = (TextView) findViewById(R.id.stockHoldingsAmount);
 
             if(dailyGrowth > 0){
                 dailyGrowthAmount.setTextColor(Color.parseColor("#008000"));
@@ -49,9 +83,6 @@ public class PortfolioSummaryActivity extends AppCompatActivity {
             }
 
             dailyGrowthAmount.setText(String.valueOf(decimalFormat2.format(dailyGrowth)) + "%");
-            netWorthAmount.setText(String.valueOf(decimalFormat1.format(netWorth)));
-            cashHoldingsAmount.setText(String.valueOf(decimalFormat1.format(cashHoldings)));
-            stockHoldingsAmount.setText(String.valueOf(decimalFormat1.format(stockHoldings)));
             careerGrowthAmount.setText(String.valueOf(decimalFormat2.format(careerGrowth)) + "%");
         }
 

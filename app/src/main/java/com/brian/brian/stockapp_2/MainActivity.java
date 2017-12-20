@@ -36,7 +36,6 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements Serializable {
 
-    static final String TABLE_PORTFOLIO = "tablePortfolio";
     static final int SEARCH_STOCK_CODE = 1;
     Stock stock = new Stock();
     Portfolio portfolio;
